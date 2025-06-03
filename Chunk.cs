@@ -18,11 +18,12 @@ namespace SimpleEngine.Voxels
         public Vector3 pos;
         public Vector3 normal;
         public Vector2 uv;
+        public int type;
     }
 
     public class Chunk
     {
-        private static int chunkSize = 256;
+        private static int chunkSize = 64;
 
         private Block[,,] blocks = new Block[chunkSize, chunkSize, chunkSize];
         private int _posVbo;
@@ -71,7 +72,7 @@ namespace SimpleEngine.Voxels
 
                         // create a quad
                         Quad quad = new Quad(new Vector3(x, y, z), dirU, dirV, norm);
-
+                        Block.Type neededType = blocks[x, y, z].type;
                         // width and height voxel offsets from starting position
                         int uOffset = 1;
                         int vOffset = 1;
@@ -83,7 +84,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (y + vOffset < chunkSize && uncovered[y + vOffset, z] && !inAQuad[y + vOffset, z])
+                            if (y + vOffset < chunkSize && uncovered[y + vOffset, z] && !inAQuad[y + vOffset, z] && blocks[x, y + vOffset, z].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -98,7 +99,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (z + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, z + uOffset] && !inAQuad[y + i, z + uOffset])
+                                if (z + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, z + uOffset] && !inAQuad[y + i, z + uOffset] && blocks[x, y + i, z + uOffset].type == neededType)
                                 {
                                     continue;
                                 }
@@ -123,7 +124,8 @@ namespace SimpleEngine.Voxels
 
                         quad.SizeU = uOffset;
                         quad.SizeV = vOffset;
-                        emitQuad(quad);
+                        
+                        emitQuad(quad, (int)blocks[x, y, z].type);
                     }
                 }
             }
@@ -163,7 +165,7 @@ namespace SimpleEngine.Voxels
                         {
                             continue;
                         }
-
+                        Block.Type neededType = blocks[x, y, z].type;
                         // create a quad
                         Quad quad = new Quad(new Vector3(x + 1, y, z), dirU, dirV, norm);
 
@@ -178,7 +180,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (y + vOffset < chunkSize && uncovered[y + vOffset, z] && !inAQuad[y + vOffset, z])
+                            if (y + vOffset < chunkSize && uncovered[y + vOffset, z] && !inAQuad[y + vOffset, z] && blocks[x, y + vOffset, z].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -193,7 +195,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (z + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, z + uOffset] && !inAQuad[y + i, z + uOffset])
+                                if (z + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, z + uOffset] && !inAQuad[y + i, z + uOffset] && blocks[x, y + i, z + uOffset].type == neededType)
                                 {
                                     continue;
                                 }
@@ -218,7 +220,8 @@ namespace SimpleEngine.Voxels
 
                         quad.SizeU = uOffset;
                         quad.SizeV = vOffset;
-                        emitQuad(quad);
+                        
+                        emitQuad(quad, (int)blocks[x, y, z].type);
                     }
                 }
             }
@@ -257,7 +260,7 @@ namespace SimpleEngine.Voxels
                         {
                             continue;
                         }
-
+                        Block.Type neededType = blocks[x, y, z].type;
                         // create a quad
                         Quad quad = new Quad(new Vector3(x, y + 1, z), dirU, dirV, norm);
 
@@ -272,7 +275,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (z + vOffset < chunkSize && uncovered[z + vOffset, x] && !inAQuad[z + vOffset, x])
+                            if (z + vOffset < chunkSize && uncovered[z + vOffset, x] && !inAQuad[z + vOffset, x] && blocks[x, y, z + vOffset].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -287,7 +290,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (x + uOffset < chunkSize && z + i < chunkSize && uncovered[z + i, x + uOffset] && !inAQuad[z + i, x + uOffset])
+                                if (x + uOffset < chunkSize && z + i < chunkSize && uncovered[z + i, x + uOffset] && !inAQuad[z + i, x + uOffset] && blocks[x + uOffset, y, z + i].type == neededType)
                                 {
                                     continue;
                                 }
@@ -312,7 +315,8 @@ namespace SimpleEngine.Voxels
 
                         quad.SizeU = uOffset;
                         quad.SizeV = vOffset;
-                        emitQuad(quad);
+                       
+                        emitQuad(quad, (int)blocks[x, y, z].type);
                     }
                 }
             }
@@ -352,7 +356,7 @@ namespace SimpleEngine.Voxels
                         {
                             continue;
                         }
-
+                        Block.Type neededType = blocks[x, y, z].type;
                         // create a quad
                         Quad quad = new Quad(new Vector3(x, y, z), dirU, dirV, norm);
 
@@ -367,7 +371,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (z + vOffset < chunkSize && uncovered[z + vOffset, x] && !inAQuad[z + vOffset, x])
+                            if (z + vOffset < chunkSize && uncovered[z + vOffset, x] && !inAQuad[z + vOffset, x] && blocks[x, y, z + vOffset].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -382,7 +386,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (x + uOffset < chunkSize && z + i < chunkSize && uncovered[z + i, x + uOffset] && !inAQuad[z + i, x + uOffset])
+                                if (x + uOffset < chunkSize && z + i < chunkSize && uncovered[z + i, x + uOffset] && !inAQuad[z + i, x + uOffset] && blocks[x + uOffset, y, z + i].type == neededType)
                                 {
                                     continue;
                                 }
@@ -407,7 +411,8 @@ namespace SimpleEngine.Voxels
 
                         quad.SizeU = uOffset;
                         quad.SizeV = vOffset;
-                        emitQuad(quad);
+                        
+                        emitQuad(quad, (int)blocks[x, y, z].type);
                     }
                 }
             }
@@ -447,7 +452,7 @@ namespace SimpleEngine.Voxels
                         {
                             continue;
                         }
-
+                        Block.Type neededType = blocks[x, y, z].type;
                         // create a quad
                         Quad quad = new Quad(new Vector3(x, y, z), dirU, dirV, norm);
 
@@ -462,7 +467,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (y + vOffset < chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x])
+                            if (y + vOffset < chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x] && blocks[x, y + vOffset, z].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -477,7 +482,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (x + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset])
+                                if (x + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset] && blocks[x + uOffset, y + i, z].type == neededType)
                                 {
                                     continue;
                                 }
@@ -502,7 +507,8 @@ namespace SimpleEngine.Voxels
 
                         quad.SizeU = uOffset;
                         quad.SizeV = vOffset;
-                        emitQuad(quad);
+                       
+                        emitQuad(quad, (int)blocks[x, y, z].type);
                     }
                 }
             }
@@ -542,7 +548,7 @@ namespace SimpleEngine.Voxels
                         {
                             continue;
                         }
-
+                        Block.Type neededType = blocks[x, y, z].type;
                         // create a quad
                         Quad quad = new Quad(new Vector3(x, y, z + 1), dirU, dirV, norm);
 
@@ -557,7 +563,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (y + vOffset < chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x])
+                            if (y + vOffset < chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x] && blocks[x, y + vOffset, x].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -572,7 +578,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (x + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset])
+                                if (x + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset] && blocks[x, y + i, x + uOffset].type == neededType)
                                 {
                                     continue;
                                 }
@@ -597,7 +603,8 @@ namespace SimpleEngine.Voxels
 
                         quad.SizeU = uOffset;
                         quad.SizeV = vOffset;
-                        emitQuad(quad);
+                        
+                        emitQuad(quad, (int)blocks[x, y, z].type);
                     }
                 }
             }
@@ -613,17 +620,17 @@ namespace SimpleEngine.Voxels
             greedyPZ();
         }
 
-        private void emitQuad(Quad quad)
+        private void emitQuad(Quad quad, int type)
         {
             Vector3 pos0 = quad.Start;
             Vector3 pos1 = quad.Start + quad.DirU * quad.SizeU;
             Vector3 pos2 = quad.Start + quad.DirU * quad.SizeU + quad.DirV * quad.SizeV;
             Vector3 pos3 = quad.Start + quad.DirV * quad.SizeV;
 
-            Vertex v0 = new Vertex() { pos = pos0, normal = quad.Normal, uv = new Vector2(0.0f, 0.0f) };
-            Vertex v1 = new Vertex() { pos = pos1, normal = quad.Normal, uv = new Vector2(quad.SizeU, 0.0f) };
-            Vertex v2 = new Vertex() { pos = pos2, normal = quad.Normal, uv = new Vector2(quad.SizeU, quad.SizeV) };
-            Vertex v3 = new Vertex() { pos = pos3, normal = quad.Normal, uv = new Vector2(0.0f, quad.SizeV) };
+            Vertex v0 = new Vertex() { pos = pos0, normal = quad.Normal, uv = new Vector2(0.0f, 0.0f), type = type };
+            Vertex v1 = new Vertex() { pos = pos1, normal = quad.Normal, uv = new Vector2(quad.SizeU, 0.0f), type = type };
+            Vertex v2 = new Vertex() { pos = pos2, normal = quad.Normal, uv = new Vector2(quad.SizeU, quad.SizeV), type = type };
+            Vertex v3 = new Vertex() { pos = pos3, normal = quad.Normal, uv = new Vector2(0.0f, quad.SizeV), type = type };
 
             int baseIndex = vertices.Count;
             vertices.Add(v0);
@@ -678,20 +685,24 @@ namespace SimpleEngine.Voxels
                     for (int y = 0; y < 28; y++)
                     {
                         blocks[x, y, z].Active = true;
-                        blocks[x, y, z].type = Block.Type.WATER;
-
-
                     }
 
                     for (int y = 0; y < chunkSize * value; y++)
                     {       
                         blocks[x, y, z].Active = true;
-                        
-                        if(y > 58)
+
+                        if (y > 58)
                         {
                             blocks[x, y, z].type = Block.Type.SNOW;
                         }
-                        
+                        else if (y > 40)
+                        {
+                            blocks[x, y, z].type = Block.Type.GRASS;
+                        }
+                        else
+                        {
+                            blocks[x, y, z].type = Block.Type.WATER;
+                        }
                     }
                 }
             }
@@ -724,6 +735,10 @@ namespace SimpleEngine.Voxels
 
             GL.EnableVertexAttribArray(2);
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, offset);
+            offset += Vector2.SizeInBytes;
+
+            GL.EnableVertexAttribArray(3);
+            GL.VertexAttribIPointer(3, 1, VertexAttribIntegerType.Int, stride, offset);
 
             _ebo = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);

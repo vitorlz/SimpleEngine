@@ -25,7 +25,14 @@ namespace SimpleEngine.Core
     class Game : GameWindow
     {
         public Game(int width, int height, string title)
-            : base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title }) 
+            : base(GameWindowSettings.Default, new NativeWindowSettings() { 
+                ClientSize = (width, height), 
+                Title = title,
+
+                API = ContextAPI.OpenGL,
+                APIVersion = new Version(4, 6),
+                Profile = ContextProfile.Core,
+            }) 
         {
             CursorState = CursorState.Grabbed;
             VSync = VSyncMode.On;
@@ -115,27 +122,6 @@ namespace SimpleEngine.Core
        
             GL.ClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
-
-            //VBO = GL.GenBuffer();
-            //GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-            //GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-
-            //VAO = GL.GenVertexArray();
-            //GL.BindVertexArray(VAO);
-
-            //GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
-            //GL.EnableVertexAttribArray(0);
-
-            //GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
-            //GL.EnableVertexAttribArray(1);
-
-            //GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
-            //GL.EnableVertexAttribArray(2);
-
-            //EBO = GL.GenBuffer();
-            //GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
-            //GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-
             //GL.Enable(EnableCap.CullFace);
 
             container = new Texture(FileHelper.FromProjectRoot("textures/container.jpg"));
@@ -211,9 +197,6 @@ namespace SimpleEngine.Core
             //GL.BindVertexArray(VAO);
             //GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
 
-           
-
-           
             chunk.Render();
             
             SwapBuffers();

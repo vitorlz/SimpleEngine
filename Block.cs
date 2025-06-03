@@ -11,9 +11,9 @@ namespace SimpleEngine.Voxels
     {
         public enum Type
         {
-            GRASS,
-            WATER,
-            SNOW
+            GRASS = 0,
+            WATER = 1,
+            SNOW = 2
         }
 
         public Type type = Type.GRASS;
