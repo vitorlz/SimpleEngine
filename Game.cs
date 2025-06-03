@@ -38,6 +38,7 @@ namespace SimpleEngine.Core
         private bool wireFrameMode = false;
         Stopwatch time = new Stopwatch();
         Camera cam;
+        private Chunk chunk;
 
         Texture container;
 
@@ -114,6 +115,7 @@ namespace SimpleEngine.Core
        
             GL.ClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
+
             //VBO = GL.GenBuffer();
             //GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
             //GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
@@ -134,7 +136,7 @@ namespace SimpleEngine.Core
             //GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
             //GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
-            GL.Enable(EnableCap.CullFace);
+            //GL.Enable(EnableCap.CullFace);
 
             container = new Texture(FileHelper.FromProjectRoot("textures/container.jpg"));
 
@@ -145,6 +147,8 @@ namespace SimpleEngine.Core
             camTransform.Scale = new Vector3(1.0f);
 
             cam = new Camera(camTransform);
+
+            chunk = new Chunk(); 
 
             time.Start();
         }
@@ -183,7 +187,7 @@ namespace SimpleEngine.Core
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), (float)800 / (float)600, 0.1f, 100.0f);
+            Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), (float)800 / (float)600, 0.1f, 1000.0f);
 
             // the order of multiplication is different here because opentk's math library is row major and glsl is column major
             // Matrix4 model = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
@@ -209,7 +213,7 @@ namespace SimpleEngine.Core
 
            
 
-            Chunk chunk = new Chunk();
+           
             chunk.Render();
             
             SwapBuffers();

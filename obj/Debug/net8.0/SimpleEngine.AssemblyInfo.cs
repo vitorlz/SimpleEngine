@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SimpleEngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6502ca05403b065507b62f6c51c59244c650212b")]
 [assembly: System.Reflection.AssemblyProductAttribute("SimpleEngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SimpleEngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

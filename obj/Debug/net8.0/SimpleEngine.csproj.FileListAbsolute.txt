@@ -29,3 +29,4 @@ C:\dev\SimpleEngine\SimpleEngine\obj\Debug\net8.0\refint\SimpleEngine.dll
 C:\dev\SimpleEngine\SimpleEngine\obj\Debug\net8.0\SimpleEngine.pdb
 C:\dev\SimpleEngine\SimpleEngine\obj\Debug\net8.0\SimpleEngine.genruntimeconfig.cache
 C:\dev\SimpleEngine\SimpleEngine\obj\Debug\net8.0\ref\SimpleEngine.dll
+C:\dev\SimpleEngine\SimpleEngine\obj\Debug\net8.0\SimpleEngine.sourcelink.json
