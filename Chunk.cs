@@ -677,8 +677,6 @@ namespace SimpleEngine.Voxels
                 }
             }
 
-            
-
             for (int x = 0; x < _chunkSize; x++)
             {
                 for (int z = 0; z < _chunkSize; z++)
