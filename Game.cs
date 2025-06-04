@@ -128,13 +128,12 @@ namespace SimpleEngine.Core
 
             Transform camTransform = new Transform();
 
-            camTransform.Position = new Vector3(0f);
+            camTransform.Position = new Vector3(0f, 64f, 0f);
             camTransform.Rotation = Quaternion.Identity;
             camTransform.Scale = new Vector3(1.0f);
 
             cam = new Camera(camTransform);
-
-            chunk = new Chunk(); 
+            chunk = new Chunk();
 
             time.Start();
         }
@@ -196,6 +195,11 @@ namespace SimpleEngine.Core
 
             //GL.BindVertexArray(VAO);
             //GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+
+            if(KeyboardState.IsKeyPressed(Keys.P))
+            {
+                chunk = new Chunk();
+            }
 
             chunk.Render();
             

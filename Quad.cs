@@ -23,15 +23,5 @@ namespace SimpleEngine.Voxels
             DirV = dirV;
             Normal = normal;
         }
-
-        public void expandU()
-        {
-            SizeU++;
-        }
-
-        public void expandV()
-        {
-            SizeV++;
-        }
     }
 }

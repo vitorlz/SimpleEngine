@@ -563,7 +563,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (y + vOffset < chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x] && blocks[x, y + vOffset, x].type == neededType)
+                            if (y + vOffset < chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x] && blocks[x, y + vOffset, z].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -578,7 +578,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (x + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset] && blocks[x, y + i, x + uOffset].type == neededType)
+                                if (x + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset] && blocks[x + uOffset, y + i, z].type == neededType)
                                 {
                                     continue;
                                 }
@@ -661,7 +661,10 @@ namespace SimpleEngine.Voxels
                 }
             }
             FastNoiseLite noise = new FastNoiseLite();
-            noise.SetSeed(1337);
+
+            var rand = new Random();
+
+            noise.SetSeed(rand.Next());
             noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
             noise.SetFrequency(0.0025f); 
             noise.SetFractalType(FastNoiseLite.FractalType.FBm);
@@ -681,10 +684,10 @@ namespace SimpleEngine.Voxels
                         value = 1.0f;
                     }
 
-
-                    for (int y = 0; y < 28; y++)
+                    for(int y = 0; y <= 20; y++)
                     {
                         blocks[x, y, z].Active = true;
+                        blocks[x, y, z].type = Block.Type.WATER;
                     }
 
                     for (int y = 0; y < chunkSize * value; y++)
@@ -695,7 +698,7 @@ namespace SimpleEngine.Voxels
                         {
                             blocks[x, y, z].type = Block.Type.SNOW;
                         }
-                        else if (y > 40)
+                        else if (y > 20)
                         {
                             blocks[x, y, z].type = Block.Type.GRASS;
                         }
@@ -745,14 +748,14 @@ namespace SimpleEngine.Voxels
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Count * sizeof(int), indices.ToArray(), BufferUsageHint.StaticDraw);
         }
 
+        // re-mesh and reupload vertices to vbo when the chunk changes.
         public void Update()
         {
-
+           
         }
 
         public void Render()
-        {
-           
+        {  
             GL.BindVertexArray(_vao);
             GL.DrawElements(PrimitiveType.Triangles, indices.Count, DrawElementsType.UnsignedInt, 0);
         }

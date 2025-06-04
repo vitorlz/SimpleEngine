@@ -17,7 +17,7 @@ namespace SimpleEngine.Cam
         public Transform Transform { get; set; }
         private Matrix4 ModelMatrix = Matrix4.Identity;
 
-        public float Velocity { get; set; } = 3.0f;
+        public float Velocity { get; set; } = 30.0f;
         public float Sensitivity { get; set; } = 10.0f;
 
         public Camera(Transform transform)
@@ -73,6 +73,14 @@ namespace SimpleEngine.Cam
 
             ModelMatrix = Matrix4.CreateFromQuaternion(Transform.Rotation);
             ModelMatrix *= Matrix4.CreateTranslation(Transform.Position);
+
+            
+
+            if(input.IsKeyPressed(Keys.O))
+            {
+                Console.WriteLine("Camera rotation: " + (Transform.Rotation.ToEulerAngles() * MathHelper.RadToDeg).ToString());
+                Console.WriteLine("Camera position: " + Transform.Position.ToString());
+            }
 
             ViewMatrix = ModelMatrix.Inverted();
         }
