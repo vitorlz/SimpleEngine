@@ -45,7 +45,8 @@ namespace SimpleEngine.Core
         private bool wireFrameMode = false;
         Stopwatch time = new Stopwatch();
         Camera cam;
-        private Chunk chunk;
+        //private Chunk chunk;
+        private ChunkManager chunkManager;
 
         Texture container;
 
@@ -133,7 +134,7 @@ namespace SimpleEngine.Core
             camTransform.Scale = new Vector3(1.0f);
 
             cam = new Camera(camTransform);
-            chunk = new Chunk();
+            chunkManager = new ChunkManager(cam.Transform.Position);
 
             time.Start();
         }
@@ -196,12 +197,13 @@ namespace SimpleEngine.Core
             //GL.BindVertexArray(VAO);
             //GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
 
-            if(KeyboardState.IsKeyPressed(Keys.P))
-            {
-                chunk = new Chunk();
-            }
+            //if(KeyboardState.IsKeyPressed(Keys.P))
+            //{
+            //    chunk = new Chunk();
+            //}
 
-            chunk.Render();
+            chunkManager.Update(cam.Transform.Position);
+            chunkManager.RenderActiveChunks();
             
             SwapBuffers();
         }

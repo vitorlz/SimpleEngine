@@ -23,9 +23,12 @@ namespace SimpleEngine.Voxels
 
     public class Chunk
     {
-        private static int chunkSize = 64;
+        private int _chunkSize;
 
-        private Block[,,] blocks = new Block[chunkSize, chunkSize, chunkSize];
+        // The position of the chunk will be _chunkSize * Pos.x, _chunkSize * Pos.y
+        public Vector2 Pos { get; set; }
+
+        private Block[,,] blocks;
         private int _posVbo;
         private int _vbo;
         private int _ebo;
@@ -33,7 +36,7 @@ namespace SimpleEngine.Voxels
         private List<Vector3> blockPos = new List<Vector3>();
         List<Vertex> vertices = new List<Vertex>();
         List<int> indices = new List<int>();
-        private int blockCount;
+        private FastNoiseLite _noise;
 
         private void greedyNX()
         {
@@ -43,15 +46,15 @@ namespace SimpleEngine.Voxels
 
             // we basically iterate through all of the faces. We then check if the face is occluded or was already included in another
             // quad. If not, we expand up, then we check if we can expand sideways. Then we just emit the quad    
-            for (int x = 0; x < chunkSize; x++)
+            for (int x = 0; x < _chunkSize; x++)
             {
-                bool[,] uncovered = new bool[chunkSize, chunkSize];
-                bool[,] inAQuad = new bool[chunkSize, chunkSize];
+                bool[,] uncovered = new bool[_chunkSize, _chunkSize];
+                bool[,] inAQuad = new bool[_chunkSize, _chunkSize];
 
                 // check which faces are uncovered
-                for (int y = 0; y < chunkSize; y++)
+                for (int y = 0; y < _chunkSize; y++)
                 {
-                    for (int z = 0; z < chunkSize; z++)
+                    for (int z = 0; z < _chunkSize; z++)
                     {
                         if (blocks[x, y, z].Active && (x == 0 || !blocks[x - 1, y, z].Active))
                         {
@@ -60,9 +63,9 @@ namespace SimpleEngine.Voxels
                     }
                 }
 
-                for (int y = 0; y < chunkSize; y++)
+                for (int y = 0; y < _chunkSize; y++)
                 {
-                    for (int z = 0; z < chunkSize; z++)
+                    for (int z = 0; z < _chunkSize; z++)
                     {
                         // won't render a quad or expand if this face is covered or is already in another quad.
                         if (inAQuad[y, z] || !uncovered[y, z])
@@ -84,7 +87,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (y + vOffset < chunkSize && uncovered[y + vOffset, z] && !inAQuad[y + vOffset, z] && blocks[x, y + vOffset, z].type == neededType)
+                            if (y + vOffset < _chunkSize && uncovered[y + vOffset, z] && !inAQuad[y + vOffset, z] && blocks[x, y + vOffset, z].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -99,7 +102,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (z + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, z + uOffset] && !inAQuad[y + i, z + uOffset] && blocks[x, y + i, z + uOffset].type == neededType)
+                                if (z + uOffset < _chunkSize && y + i < _chunkSize && uncovered[y + i, z + uOffset] && !inAQuad[y + i, z + uOffset] && blocks[x, y + i, z + uOffset].type == neededType)
                                 {
                                     continue;
                                 }
@@ -139,26 +142,26 @@ namespace SimpleEngine.Voxels
 
             // we basically iterate through all of the faces. We then check if the face is occluded or was already included in another
             // quad. If not, we expand up, then we check if we can expand sideways. Then we just emit the quad    
-            for (int x = 0; x < chunkSize; x++)
+            for (int x = 0; x < _chunkSize; x++)
             {
-                bool[,] uncovered = new bool[chunkSize, chunkSize];
-                bool[,] inAQuad = new bool[chunkSize, chunkSize];
+                bool[,] uncovered = new bool[_chunkSize, _chunkSize];
+                bool[,] inAQuad = new bool[_chunkSize, _chunkSize];
 
                 // check which faces are uncovered
-                for (int y = 0; y < chunkSize; y++)
+                for (int y = 0; y < _chunkSize; y++)
                 {
-                    for (int z = 0; z < chunkSize; z++)
+                    for (int z = 0; z < _chunkSize; z++)
                     {
-                        if (blocks[x, y, z].Active && (x == chunkSize - 1 || !blocks[x + 1, y, z].Active))
+                        if (blocks[x, y, z].Active && (x == _chunkSize - 1 || !blocks[x + 1, y, z].Active))
                         {
                             uncovered[y, z] = true;
                         }
                     }
                 }
 
-                for (int y = 0; y < chunkSize; y++)
+                for (int y = 0; y < _chunkSize; y++)
                 {
-                    for (int z = 0; z < chunkSize; z++)
+                    for (int z = 0; z < _chunkSize; z++)
                     {
                         // won't render a quad or expand if this face is covered or is already in another quad.
                         if (inAQuad[y, z] || !uncovered[y, z])
@@ -180,7 +183,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (y + vOffset < chunkSize && uncovered[y + vOffset, z] && !inAQuad[y + vOffset, z] && blocks[x, y + vOffset, z].type == neededType)
+                            if (y + vOffset < _chunkSize && uncovered[y + vOffset, z] && !inAQuad[y + vOffset, z] && blocks[x, y + vOffset, z].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -195,7 +198,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (z + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, z + uOffset] && !inAQuad[y + i, z + uOffset] && blocks[x, y + i, z + uOffset].type == neededType)
+                                if (z + uOffset < _chunkSize && y + i < _chunkSize && uncovered[y + i, z + uOffset] && !inAQuad[y + i, z + uOffset] && blocks[x, y + i, z + uOffset].type == neededType)
                                 {
                                     continue;
                                 }
@@ -234,26 +237,26 @@ namespace SimpleEngine.Voxels
 
             // we basically iterate through all of the faces. We then check if the face is occluded or was already included in another
             // quad. If not, we expand up, then we check if we can expand sideways. Then we just emit the quad    
-            for (int y = 0; y < chunkSize; y++)
+            for (int y = 0; y < _chunkSize; y++)
             {
-                bool[,] uncovered = new bool[chunkSize, chunkSize];
-                bool[,] inAQuad = new bool[chunkSize, chunkSize];
+                bool[,] uncovered = new bool[_chunkSize, _chunkSize];
+                bool[,] inAQuad = new bool[_chunkSize, _chunkSize];
 
                 // check which faces are uncovered
-                for (int z = 0; z < chunkSize; z++)
+                for (int z = 0; z < _chunkSize; z++)
                 {
-                    for (int x = 0; x < chunkSize; x++)
+                    for (int x = 0; x < _chunkSize; x++)
                     {
-                        if (blocks[x, y, z].Active && (y == chunkSize - 1 || !blocks[x, y + 1, z].Active))
+                        if (blocks[x, y, z].Active && (y == _chunkSize - 1 || !blocks[x, y + 1, z].Active))
                         {
                             uncovered[z, x] = true;
                         }
                     }
                 }
 
-                for (int z = 0; z < chunkSize; z++)
+                for (int z = 0; z < _chunkSize; z++)
                 {
-                    for (int x = 0; x < chunkSize; x++)
+                    for (int x = 0; x < _chunkSize; x++)
                     {
                         // won't render a quad or expand if this face is covered or is already in another quad.
                         if (inAQuad[z, x] || !uncovered[z, x])
@@ -275,7 +278,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (z + vOffset < chunkSize && uncovered[z + vOffset, x] && !inAQuad[z + vOffset, x] && blocks[x, y, z + vOffset].type == neededType)
+                            if (z + vOffset < _chunkSize && uncovered[z + vOffset, x] && !inAQuad[z + vOffset, x] && blocks[x, y, z + vOffset].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -290,7 +293,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (x + uOffset < chunkSize && z + i < chunkSize && uncovered[z + i, x + uOffset] && !inAQuad[z + i, x + uOffset] && blocks[x + uOffset, y, z + i].type == neededType)
+                                if (x + uOffset < _chunkSize && z + i < _chunkSize && uncovered[z + i, x + uOffset] && !inAQuad[z + i, x + uOffset] && blocks[x + uOffset, y, z + i].type == neededType)
                                 {
                                     continue;
                                 }
@@ -330,15 +333,15 @@ namespace SimpleEngine.Voxels
 
             // we basically iterate through all of the faces. We then check if the face is occluded or was already included in another
             // quad. If not, we expand up, then we check if we can expand sideways. Then we just emit the quad    
-            for (int y = 0; y < chunkSize; y++)
+            for (int y = 0; y < _chunkSize; y++)
             {
-                bool[,] uncovered = new bool[chunkSize, chunkSize];
-                bool[,] inAQuad = new bool[chunkSize, chunkSize];
+                bool[,] uncovered = new bool[_chunkSize, _chunkSize];
+                bool[,] inAQuad = new bool[_chunkSize, _chunkSize];
 
                 // check which faces are uncovered
-                for (int z = 0; z < chunkSize; z++)
+                for (int z = 0; z < _chunkSize; z++)
                 {
-                    for (int x = 0; x < chunkSize; x++)
+                    for (int x = 0; x < _chunkSize; x++)
                     {
                         if (blocks[x, y, z].Active && (y == 0 || !blocks[x, y - 1, z].Active))
                         {
@@ -347,9 +350,9 @@ namespace SimpleEngine.Voxels
                     }
                 }
 
-                for (int z = 0; z < chunkSize; z++)
+                for (int z = 0; z < _chunkSize; z++)
                 {
-                    for (int x = 0; x < chunkSize; x++)
+                    for (int x = 0; x < _chunkSize; x++)
                     {
                         // won't render a quad or expand if this face is covered or is already in another quad.
                         if (inAQuad[z, x] || !uncovered[z, x])
@@ -371,7 +374,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (z + vOffset < chunkSize && uncovered[z + vOffset, x] && !inAQuad[z + vOffset, x] && blocks[x, y, z + vOffset].type == neededType)
+                            if (z + vOffset < _chunkSize && uncovered[z + vOffset, x] && !inAQuad[z + vOffset, x] && blocks[x, y, z + vOffset].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -386,7 +389,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (x + uOffset < chunkSize && z + i < chunkSize && uncovered[z + i, x + uOffset] && !inAQuad[z + i, x + uOffset] && blocks[x + uOffset, y, z + i].type == neededType)
+                                if (x + uOffset < _chunkSize && z + i < _chunkSize && uncovered[z + i, x + uOffset] && !inAQuad[z + i, x + uOffset] && blocks[x + uOffset, y, z + i].type == neededType)
                                 {
                                     continue;
                                 }
@@ -426,15 +429,15 @@ namespace SimpleEngine.Voxels
 
             // we basically iterate through all of the faces. We then check if the face is occluded or was already included in another
             // quad. If not, we expand up, then we check if we can expand sideways. Then we just emit the quad    
-            for (int z = 0; z < chunkSize; z++)
+            for (int z = 0; z < _chunkSize; z++)
             {
-                bool[,] uncovered = new bool[chunkSize, chunkSize];
-                bool[,] inAQuad = new bool[chunkSize, chunkSize];
+                bool[,] uncovered = new bool[_chunkSize, _chunkSize];
+                bool[,] inAQuad = new bool[_chunkSize, _chunkSize];
 
                 // check which faces are uncovered
-                for (int y = 0; y < chunkSize; y++)
+                for (int y = 0; y < _chunkSize; y++)
                 {
-                    for (int x = 0; x < chunkSize; x++)
+                    for (int x = 0; x < _chunkSize; x++)
                     {
                         if (blocks[x, y, z].Active && (z == 0 || !blocks[x, y, z - 1].Active))
                         {
@@ -443,9 +446,9 @@ namespace SimpleEngine.Voxels
                     }
                 }
 
-                for (int y = 0; y < chunkSize; y++)
+                for (int y = 0; y < _chunkSize; y++)
                 {
-                    for (int x = 0; x < chunkSize; x++)
+                    for (int x = 0; x < _chunkSize; x++)
                     {
                         // won't render a quad or expand if this face is covered or is already in another quad.
                         if (inAQuad[y, x] || !uncovered[y, x])
@@ -467,7 +470,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (y + vOffset < chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x] && blocks[x, y + vOffset, z].type == neededType)
+                            if (y + vOffset < _chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x] && blocks[x, y + vOffset, z].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -482,7 +485,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (x + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset] && blocks[x + uOffset, y + i, z].type == neededType)
+                                if (x + uOffset < _chunkSize && y + i < _chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset] && blocks[x + uOffset, y + i, z].type == neededType)
                                 {
                                     continue;
                                 }
@@ -522,26 +525,26 @@ namespace SimpleEngine.Voxels
 
             // we basically iterate through all of the faces. We then check if the face is occluded or was already included in another
             // quad. If not, we expand up, then we check if we can expand sideways. Then we just emit the quad    
-            for (int z = 0; z < chunkSize; z++)
+            for (int z = 0; z < _chunkSize; z++)
             {
-                bool[,] uncovered = new bool[chunkSize, chunkSize];
-                bool[,] inAQuad = new bool[chunkSize, chunkSize];
+                bool[,] uncovered = new bool[_chunkSize, _chunkSize];
+                bool[,] inAQuad = new bool[_chunkSize, _chunkSize];
 
                 // check which faces are uncovered
-                for (int y = 0; y < chunkSize; y++)
+                for (int y = 0; y < _chunkSize; y++)
                 {
-                    for (int x = 0; x < chunkSize; x++)
+                    for (int x = 0; x < _chunkSize; x++)
                     {
-                        if (blocks[x, y, z].Active && (z == chunkSize - 1 || !blocks[x, y, z + 1].Active))
+                        if (blocks[x, y, z].Active && (z == _chunkSize - 1 || !blocks[x, y, z + 1].Active))
                         {
                             uncovered[y, x] = true;
                         }
                     }
                 }
 
-                for (int y = 0; y < chunkSize; y++)
+                for (int y = 0; y < _chunkSize; y++)
                 {
-                    for (int x = 0; x < chunkSize; x++)
+                    for (int x = 0; x < _chunkSize; x++)
                     {
                         // won't render a quad or expand if this face is covered or is already in another quad.
                         if (inAQuad[y, x] || !uncovered[y, x])
@@ -563,7 +566,7 @@ namespace SimpleEngine.Voxels
 
                         while (expandV)
                         {
-                            if (y + vOffset < chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x] && blocks[x, y + vOffset, z].type == neededType)
+                            if (y + vOffset < _chunkSize && uncovered[y + vOffset, x] && !inAQuad[y + vOffset, x] && blocks[x, y + vOffset, z].type == neededType)
                             {
                                 vOffset++;
                                 continue;
@@ -578,7 +581,7 @@ namespace SimpleEngine.Voxels
                         {
                             for (int i = 0; i < vOffset; i++)
                             {
-                                if (x + uOffset < chunkSize && y + i < chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset] && blocks[x + uOffset, y + i, z].type == neededType)
+                                if (x + uOffset < _chunkSize && y + i < _chunkSize && uncovered[y + i, x + uOffset] && !inAQuad[y + i, x + uOffset] && blocks[x + uOffset, y + i, z].type == neededType)
                                 {
                                     continue;
                                 }
@@ -622,10 +625,17 @@ namespace SimpleEngine.Voxels
 
         private void emitQuad(Quad quad, int type)
         {
+            Vector3 offset = new Vector3(Pos.X, 0, Pos.Y); 
+
             Vector3 pos0 = quad.Start;
             Vector3 pos1 = quad.Start + quad.DirU * quad.SizeU;
             Vector3 pos2 = quad.Start + quad.DirU * quad.SizeU + quad.DirV * quad.SizeV;
             Vector3 pos3 = quad.Start + quad.DirV * quad.SizeV;
+
+            pos0 += offset;
+            pos1 += offset;
+            pos2 += offset;
+            pos3 += offset;
 
             Vertex v0 = new Vertex() { pos = pos0, normal = quad.Normal, uv = new Vector2(0.0f, 0.0f), type = type };
             Vertex v1 = new Vertex() { pos = pos1, normal = quad.Normal, uv = new Vector2(quad.SizeU, 0.0f), type = type };
@@ -647,37 +657,33 @@ namespace SimpleEngine.Voxels
             indices.Add(baseIndex + 3);
         }
 
-        public Chunk() 
+        public Chunk(Vector2 pos, int chunkSize, FastNoiseLite noise)
         {
-            for (int x = 0; x < chunkSize; x++)
+            Pos = pos;
+            _chunkSize = chunkSize;
+            _noise = noise;
+            blocks = new Block[_chunkSize, _chunkSize, _chunkSize];
+            Vector3 chunkOffset = new Vector3(Pos.X, 0, Pos.Y);
+
+            for (int x = 0; x < _chunkSize; x++)
             {
-                for (int y = 0; y < chunkSize; y++)
+                for (int y = 0; y < _chunkSize; y++)
                 {
-                    for (int z = 0; z < chunkSize; z++)
+                    for (int z = 0; z < _chunkSize; z++)
                     {
 
                         blocks[x, y, z] = new Block();
                     }
                 }
             }
-            FastNoiseLite noise = new FastNoiseLite();
 
-            var rand = new Random();
+            
 
-            noise.SetSeed(rand.Next());
-            noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-            noise.SetFrequency(0.0025f); 
-            noise.SetFractalType(FastNoiseLite.FractalType.FBm);
-            noise.SetFractalOctaves(5);       
-            noise.SetFractalLacunarity(2.0f); 
-            noise.SetFractalGain(0.5f);
-
-            for (int x = 0; x < chunkSize; x++)
+            for (int x = 0; x < _chunkSize; x++)
             {
-                for (int z = 0; z < chunkSize; z++)
+                for (int z = 0; z < _chunkSize; z++)
                 {
-
-                    float value = noise.GetNoise(x, z) / 0.5f + 0.5f;
+                    float value = noise.GetNoise(x + chunkOffset.X, z + chunkOffset.Z) / 0.5f + 0.5f;
 
                     if(value > 1.0)
                     {
@@ -690,7 +696,7 @@ namespace SimpleEngine.Voxels
                         blocks[x, y, z].type = Block.Type.WATER;
                     }
 
-                    for (int y = 0; y < chunkSize * value; y++)
+                    for (int y = 0; y < _chunkSize * value; y++)
                     {       
                         blocks[x, y, z].Active = true;
 

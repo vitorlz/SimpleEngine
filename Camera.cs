@@ -74,8 +74,6 @@ namespace SimpleEngine.Cam
             ModelMatrix = Matrix4.CreateFromQuaternion(Transform.Rotation);
             ModelMatrix *= Matrix4.CreateTranslation(Transform.Position);
 
-            
-
             if(input.IsKeyPressed(Keys.O))
             {
                 Console.WriteLine("Camera rotation: " + (Transform.Rotation.ToEulerAngles() * MathHelper.RadToDeg).ToString());
