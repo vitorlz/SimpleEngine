@@ -716,8 +716,6 @@ namespace SimpleEngine.Voxels
 
             greedyMesh();
 
-            Console.WriteLine(vertices.Count);
-
             int vertexSize = Marshal.SizeOf(typeof(Vertex));
             int totalSize = vertices.Count * vertexSize;
 

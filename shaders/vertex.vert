@@ -11,7 +11,7 @@ uniform mat4 p;
 
 out vec3 Normal;
 out vec2 TexCoords;
-out vec3 Color;
+out vec4 Color;
 
 void main()
 {
@@ -21,23 +21,23 @@ void main()
 
 	float diff = max(dot(normalize(aNormal), vec3(0.3, 1.0, 0.3)), 0.0);
 
-	vec3 color;
+	vec4 color;
 
 	if(aType == 2)
 	{
-		color = vec3(1.0);
+		color = vec4(1.0);
 	}
 	else if(aType == 1)
 	{
-		color = vec3(0, 0.714, 1);
+		color = vec4(0, 0.714, 1, 0.4);
 	}
 	else
 	{
-		color = vec3(0.192, 0.671, 0.29);
+		color = vec4(0.192, 0.671, 0.29, 1.0);
 	}
 
-	vec3 ambient = vec3(0.3);
+	float ambient = 0.3;
 
-	Color = color * (diff + ambient);
+	Color = vec4(color.rgb * (diff + ambient), color.a);
 }
 
