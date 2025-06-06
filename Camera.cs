@@ -17,6 +17,8 @@ namespace SimpleEngine.Cam
         public Transform Transform { get; set; }
         private Matrix4 ModelMatrix = Matrix4.Identity;
 
+        private float _pitch;
+
         public float Velocity { get; set; } = 30.0f;
         public float Sensitivity { get; set; } = 10.0f;
 
@@ -34,9 +36,23 @@ namespace SimpleEngine.Cam
             Vector3 front = -ModelMatrix.Column2.Xyz;
 
             Vector2 mouseDelta = mouse.Delta;
+            float deltaYaw = -mouse.Delta.X * (float)dt * Sensitivity;
+            float deltaPitch = -mouse.Delta.Y * (float)dt * Sensitivity;
+            _pitch += deltaPitch;
 
-            Quaternion pitch = Quaternion.FromAxisAngle(new Vector3(1.0f, 0.0f, 0.0f), MathHelper.DegreesToRadians(-mouse.Delta.Y * (float)dt * Sensitivity));
-            Quaternion yaw = Quaternion.FromAxisAngle(new Vector3(0.0f, 1.0f, 0.0f), MathHelper.DegreesToRadians(-mouse.Delta.X * (float)dt * Sensitivity));
+            if (_pitch >= 89f)
+            {
+                _pitch = 89f;
+                deltaPitch = 0f;
+            }
+            else if (_pitch <= -89f)
+            {
+                _pitch = -89f;
+                deltaPitch = 0f;
+            }
+
+            Quaternion pitch = Quaternion.FromAxisAngle(new Vector3(1.0f, 0.0f, 0.0f), MathHelper.DegreesToRadians(deltaPitch));
+            Quaternion yaw = Quaternion.FromAxisAngle(new Vector3(0.0f, 1.0f, 0.0f), MathHelper.DegreesToRadians(deltaYaw));
 
             Transform.Rotation = yaw * Transform.Rotation * pitch;
 

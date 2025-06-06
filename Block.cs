@@ -13,7 +13,10 @@ namespace SimpleEngine.Voxels
         {
             GRASS = 0,
             WATER = 1,
-            SNOW = 2
+            SNOW = 2,
+            STONE = 3,
+            WOOD = 4,
+            LEAVES = 5,
         }
 
         public Type type = Type.GRASS;

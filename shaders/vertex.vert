@@ -29,7 +29,19 @@ void main()
 	}
 	else if(aType == 1)
 	{
-		color = vec4(0, 0.714, 1, 0.4);
+		color = vec4(0.039, 0.106, 1.0, 1.0);
+	}
+	else if(aType == 3)
+	{
+		color = vec4(vec3(0.4), 1.0);
+	}
+	else if(aType == 4)
+	{
+		color = vec4(0.38, 0.294, 0.078, 1.0);
+	}
+	else if(aType == 5)
+	{
+		color = vec4(0.055, 0.361, 0.063, 1.0);
 	}
 	else
 	{

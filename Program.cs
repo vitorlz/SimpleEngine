@@ -7,7 +7,7 @@ namespace SimpleEngine
     {
         public static void Main(string[] args) 
         {
-            using (Game game = new Game(800, 600, "SimpleEngine"))
+            using (Game game = new Game(1440, 900, "SimpleEngine"))
             {
                 game.Run();
             }

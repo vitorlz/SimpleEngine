@@ -9,6 +9,7 @@ using OpenTK.Mathematics;
 using System.Runtime.InteropServices;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
+using System.Runtime.ExceptionServices;
 
 
 namespace SimpleEngine.Voxels
@@ -29,14 +30,14 @@ namespace SimpleEngine.Voxels
         public Vector2 Pos { get; set; }
 
         private Block[,,] blocks;
-        private int _posVbo;
         private int _vbo;
         private int _ebo;
         private int _vao;
         private List<Vector3> blockPos = new List<Vector3>();
         List<Vertex> vertices = new List<Vertex>();
         List<int> indices = new List<int>();
-        private FastNoiseLite _noise;
+        private Dictionary<string, FastNoiseLite> _noises;
+        
         private Vector3 _chunkOffset = new Vector3();
 
         private void greedyNX()
@@ -658,11 +659,11 @@ namespace SimpleEngine.Voxels
             indices.Add(baseIndex + 3);
         }
 
-        public Chunk(Vector2 pos, int chunkSize, FastNoiseLite noise)
+        public Chunk(Vector2 pos, int chunkSize, Dictionary<string, FastNoiseLite> noises)
         {
             Pos = pos;
             _chunkSize = chunkSize;
-            _noise = noise;
+            _noises = noises;
             blocks = new Block[_chunkSize, _chunkSize, _chunkSize];
             _chunkOffset = new Vector3(Pos.X, 0, Pos.Y);
 
@@ -670,6 +671,8 @@ namespace SimpleEngine.Voxels
 
         public void CreateChunk()
         {
+            Random random = new Random();
+
             for (int x = 0; x < _chunkSize; x++)
             {
                 for (int y = 0; y < _chunkSize; y++)
@@ -686,30 +689,51 @@ namespace SimpleEngine.Voxels
             {
                 for (int z = 0; z < _chunkSize; z++)
                 {
-                    float value = _noise.GetNoise(x + _chunkOffset.X, z + _chunkOffset.Z) / 0.5f + 0.5f;
 
-                    if (value > 1.0)
-                    {
-                        value = 1.0f;
-                    }
+                    Vector2 chunkPos = new Vector2(x + _chunkOffset.X, z + _chunkOffset.Z);
+                  
+                    float heightNoise = Math.Clamp(_noises["height"].GetNoise(chunkPos.X, chunkPos.Y) / 0.5f + 0.5f, 0.0f, 1.0f);
+                    float stoneNoise = Math.Clamp(_noises["stone"].GetNoise(chunkPos.X, chunkPos.Y) / 0.5f + 0.5f, 0.0f, 1.0f);
+                    float treeNoise = Math.Clamp(_noises["tree"].GetNoise(chunkPos.X, chunkPos.Y) / 0.5f + 0.5f, 0.0f, 1.0f);
 
-                    for (int y = 0; y <= 10; y++)
+                    
+
+                    for (int y = 0; y <= _chunkSize * 0.1; y++)
                     {
                         blocks[x, y, z].Active = true;
                         blocks[x, y, z].type = Block.Type.WATER;
                     }
 
-                    for (int y = 0; y < _chunkSize * value; y++)
+                    for (int y = 0; y < _chunkSize * heightNoise; y++)
                     {
                         blocks[x, y, z].Active = true;
 
-                        if (y > 28)
+                        if (y > _chunkSize * 0.9)
                         {
                             blocks[x, y, z].type = Block.Type.SNOW;
                         }
-                        else if (y > 10)
+                        else if (y > _chunkSize * 0.1)
                         {
-                            blocks[x, y, z].type = Block.Type.GRASS;
+                            if(stoneNoise > 0.7 && y > _chunkSize * 0.7)
+                            {
+                                blocks[x, y, z].type = Block.Type.STONE;
+                            }
+                            else
+                            {
+                                blocks[x, y, z].type = Block.Type.GRASS;
+                                if (y == (int)(_chunkSize * heightNoise))
+                                {
+                                    if (treeNoise > 0.3) 
+                                    {
+                                        if(random.Next(100) == 1)
+                                        {
+                                            CreateTree(x, y, z);
+                                        }
+                                       
+                                    }
+                                }
+                            }
+                               
                         }
                         else
                         {
@@ -720,6 +744,39 @@ namespace SimpleEngine.Voxels
             }
 
             GreedyMesh();
+        }
+
+        private void CreateTree(int x , int y, int z)
+        {
+            int treeHeight = 3;
+            y++;
+
+            if (!(x > 0 && x < _chunkSize - 1 && z > 0 && z < _chunkSize - 1 && y + treeHeight + 1 < _chunkSize - 1))
+            {
+                return;
+            }
+
+            for (int i = 0; i < treeHeight; i++)
+            {
+                blocks[x, y + i, z].type = Block.Type.WOOD;
+                blocks[x, y + i, z].Active = true; 
+            }
+
+           
+            blocks[x + 1, y + treeHeight, z].type = Block.Type.LEAVES;
+            blocks[x + 1, y + treeHeight, z].Active = true;
+               
+            blocks[x - 1, y + treeHeight, z].type = Block.Type.LEAVES;
+            blocks[x - 1, y + treeHeight, z].Active = true;
+
+            blocks[x, y + treeHeight, z + 1].type = Block.Type.LEAVES;
+            blocks[x, y + treeHeight, z + 1].Active = true;
+
+            blocks[x, y + treeHeight, z - 1].type = Block.Type.LEAVES;
+            blocks[x, y + treeHeight, z - 1].Active = true;
+               
+            blocks[x, y + treeHeight + 1, z].type = Block.Type.LEAVES;
+            blocks[x, y + treeHeight + 1, z].Active = true;
         }
 
         public void UploadVerticesToGPU()

@@ -39,9 +39,6 @@ namespace SimpleEngine.Core
         }
 
         private Shader s;
-        private int VAO;
-        private int VBO;
-        private int EBO;
         private bool wireFrameMode = false;
         Stopwatch time = new Stopwatch();
         Camera cam;
@@ -57,7 +54,7 @@ namespace SimpleEngine.Core
 
             GL.Enable(EnableCap.DepthTest);
        
-            GL.ClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+            GL.ClearColor(0.039f, 0.8f, 1f, 1.0f);
 
             //GL.Enable(EnableCap.CullFace);
 
@@ -73,8 +70,6 @@ namespace SimpleEngine.Core
             chunkManager = new ChunkManager(cam);
 
             time.Start();
-
-           
         }
 
         protected override void OnUpdateFrame(FrameEventArgs args)
