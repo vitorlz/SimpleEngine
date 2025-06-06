@@ -5,6 +5,7 @@ using OpenTK.Mathematics;
 using System.Text;
 using System.Threading.Tasks;
 using SimpleEngine.Cam;
+using System.Collections.Concurrent;
 
 namespace SimpleEngine.Voxels
 {
@@ -17,7 +18,7 @@ namespace SimpleEngine.Voxels
 
         private FastNoiseLite _noise;
 
-        // the amount of chunks we can see --> render chunks within a 16 * chunkSize distance from the camera.
+        // the amount of chunks we can see --> render chunks within a _renderDistance * chunkSize distance from the camera.
         private const int _renderDistance = 16;
 
         // maintain a list of chunks that should be rendered to the screen
@@ -32,7 +33,10 @@ namespace SimpleEngine.Voxels
         // maintain a list of the positions of chunks to load. We don't want to render all newly visible chunks at once in a single frame,
         // so we will just maintain a list of them and load a number of them per frame. Will try to load each chunk in 
         // a different thread using a thread pool
-        private Queue<Vector2> _chunksToLoad = new Queue<Vector2>();
+        private ConcurrentQueue<Chunk> _chunksToLoad = new ConcurrentQueue<Chunk>();
+        private ConcurrentQueue<Chunk> _readyToUpload = new ConcurrentQueue<Chunk>();
+
+        private Vector2 _currentChunkPos = new Vector2();
 
         // populate _activeChunks with initial chunks based on the camera's initial position
         public ChunkManager(Camera camera) 
@@ -47,67 +51,80 @@ namespace SimpleEngine.Voxels
             _noise.SetFractalLacunarity(2.0f);
             _noise.SetFractalGain(0.5f);
             // figure out which chunk we are in now
-
             _camera = camera;
             _cameraPos = new Vector2(_camera.Transform.Position.X, _camera.Transform.Position.Z);
-
-            Vector2 currentChunkPos = (_cameraPos / _chunkSize).Truncate();
-
-            for(int x = -_renderDistance; x <= _renderDistance; x++)
-            {
-                for (int y = -_renderDistance; y <= _renderDistance; y++)
-                {
-                    // send the chunk position to the chunk. In the chunk we offset everything by Pos.
-                    Vector2 pos = new Vector2((currentChunkPos.X + x) * _chunkSize, (currentChunkPos.Y + y) * _chunkSize);
-                    Chunk newChunk = new Chunk(pos, _chunkSize, _noise);
-                    _activeChunks.Add(newChunk);
-                    _loadedChunks[(int)pos.X + (int)pos.Y * 10000] = newChunk;
-                }
-            }
         }
 
-        public void Update()
+        public void EnqueueNewChunks()
         {
-            _cameraPos = new Vector2(_camera.Transform.Position.X, _camera.Transform.Position.Z);
-            Vector2 currentChunkPos = (_cameraPos / _chunkSize).Truncate();
-
-            for (int i = 0; i < _activeChunks.Count; i++)
-            {
-                if (Math.Abs((int)(_activeChunks[i].Pos.X / _chunkSize) - currentChunkPos.X) >= _renderDistance
-                    || Math.Abs((int)(_activeChunks[i].Pos.Y / _chunkSize) - currentChunkPos.Y) >= _renderDistance)
-                {
-                    _activeChunks.RemoveAt(i);
-                }
-            }
-
             for (int x = -_renderDistance; x <= _renderDistance; x++)
             {
                 for (int y = -_renderDistance; y <= _renderDistance; y++)
                 {
                     // send the chunk position to the chunk. In the chunk we offset everything by Pos.
-
-                    Vector2 pos = new Vector2((currentChunkPos.X + x) * _chunkSize, (currentChunkPos.Y + y) * _chunkSize);
-
-                    if(!_loadedChunks.ContainsKey((int)pos.X + (int)pos.Y * 10000))
+                    Vector2 pos = new Vector2((_currentChunkPos.X + x) * _chunkSize, (_currentChunkPos.Y + y) * _chunkSize);
+                    if (!_loadedChunks.ContainsKey((int)pos.X + (int)pos.Y * 10000))
                     {
                         Chunk newChunk = new Chunk(pos, _chunkSize, _noise);
-                        _activeChunks.Add(newChunk);
+                        _chunksToLoad.Enqueue(newChunk);
                         _loadedChunks[(int)pos.X + (int)pos.Y * 10000] = newChunk;
-                    }
-                    else
-                    {
-                        if (!_activeChunks.Contains(_loadedChunks[(int)pos.X + (int)pos.Y * 10000]))
-                        {
-                            _activeChunks.Add(_loadedChunks[(int)pos.X + (int)pos.Y * 10000]);
-                        }   
                     }
                 }
             }            
         }
 
-       
+        public void RemoveOutOfSightChunks()
+        { 
+            for (int i = 0; i < _activeChunks.Count; i++)
+            {
+                float distanceX = Math.Abs((int)(_activeChunks[i].Pos.X / _chunkSize) - _currentChunkPos.X);
+                float distanceY = Math.Abs((int)(_activeChunks[i].Pos.Y / _chunkSize) - _currentChunkPos.Y);
 
-       
+                if ( distanceX > _renderDistance || distanceY > _renderDistance)
+                {
+                    Console.WriteLine("removing chunk");
+                    Console.WriteLine($"Distance X: {distanceX}, Distance Y: {distanceY}");
+
+                    Chunk chunkToRemove = _activeChunks[i];
+
+                    _loadedChunks.Remove((int)chunkToRemove.Pos.X + (int)chunkToRemove.Pos.Y * 10000);
+                    _activeChunks.RemoveAt(i);
+                }
+            }
+        }
+
+        public void LoadNewChunks()
+        {
+            // We are going to load two chunks per frame, each in a different thread.
+            // The worker threads are going to get chunks from the _chunksToLoad, call CreateChunk() and put the loaded
+            // chunks in _readyToUpload.
+            ThreadPool.QueueUserWorkItem(LoadChunk);
+            ThreadPool.QueueUserWorkItem(LoadChunk);
+        }
+
+        // create a chunk and put it in the ready to render queue. 
+        // This is done by a worker thread.
+        public void LoadChunk(Object state)
+        {   
+            Chunk chunkToLoad;
+            if(_chunksToLoad.TryDequeue(out chunkToLoad))
+            {
+                chunkToLoad.CreateChunk();
+                _readyToUpload.Enqueue(chunkToLoad);
+            }
+        }
+
+        // upload new chunk to gpu. This has to be done by the main thread because it calls the opengl api.
+        // put the now ready-to-render chunk in _activeChunks so that it can be rendered
+        public void UploadNewChunk()
+        {
+            Chunk chunkToUpload;
+            if (_readyToUpload.TryDequeue(out chunkToUpload))
+            {
+                chunkToUpload.UploadVerticesToGPU();
+                _activeChunks.Add(chunkToUpload);
+            }
+        }
 
         public void RenderActiveChunks()
         {
@@ -117,9 +134,20 @@ namespace SimpleEngine.Voxels
             }
         }
 
-        private void UpdateActiveChunks()
+        public void UpdateCurrentChunkPos()
         {
-            
+            _cameraPos.X = _camera.Transform.Position.X;
+            _cameraPos.Y = _camera.Transform.Position.Z;
+            _currentChunkPos = (_cameraPos / _chunkSize).Truncate();
+        }
+
+        public void Update()
+        {
+            UpdateCurrentChunkPos();
+            RemoveOutOfSightChunks();
+            EnqueueNewChunks();
+            LoadNewChunks();
+            UploadNewChunk();
         }
     }
 }

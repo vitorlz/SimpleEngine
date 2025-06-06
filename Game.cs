@@ -32,6 +32,7 @@ namespace SimpleEngine.Core
                 API = ContextAPI.OpenGL,
                 APIVersion = new Version(4, 6),
                 Profile = ContextProfile.Core,
+                Vsync = VSyncMode.Off,
             }) 
         {
             CursorState = CursorState.Grabbed;
@@ -134,7 +135,7 @@ namespace SimpleEngine.Core
 
             chunkManager.Update();
             chunkManager.RenderActiveChunks();
-
+            
             SwapBuffers();
         }
 

@@ -37,6 +37,7 @@ namespace SimpleEngine.Voxels
         List<Vertex> vertices = new List<Vertex>();
         List<int> indices = new List<int>();
         private FastNoiseLite _noise;
+        private Vector3 _chunkOffset = new Vector3();
 
         private void greedyNX()
         {
@@ -613,7 +614,7 @@ namespace SimpleEngine.Voxels
             }
         }
 
-        public void greedyMesh()
+        public void GreedyMesh()
         {
             greedyNX();
             greedyPX();
@@ -663,8 +664,12 @@ namespace SimpleEngine.Voxels
             _chunkSize = chunkSize;
             _noise = noise;
             blocks = new Block[_chunkSize, _chunkSize, _chunkSize];
-            Vector3 chunkOffset = new Vector3(Pos.X, 0, Pos.Y);
+            _chunkOffset = new Vector3(Pos.X, 0, Pos.Y);
 
+        }
+
+        public void CreateChunk()
+        {
             for (int x = 0; x < _chunkSize; x++)
             {
                 for (int y = 0; y < _chunkSize; y++)
@@ -681,28 +686,28 @@ namespace SimpleEngine.Voxels
             {
                 for (int z = 0; z < _chunkSize; z++)
                 {
-                    float value = noise.GetNoise(x + chunkOffset.X, z + chunkOffset.Z) / 0.5f + 0.5f;
+                    float value = _noise.GetNoise(x + _chunkOffset.X, z + _chunkOffset.Z) / 0.5f + 0.5f;
 
-                    if(value > 1.0)
+                    if (value > 1.0)
                     {
                         value = 1.0f;
                     }
 
-                    for(int y = 0; y <= 20; y++)
+                    for (int y = 0; y <= 10; y++)
                     {
                         blocks[x, y, z].Active = true;
                         blocks[x, y, z].type = Block.Type.WATER;
                     }
 
                     for (int y = 0; y < _chunkSize * value; y++)
-                    {       
+                    {
                         blocks[x, y, z].Active = true;
 
-                        if (y > 58)
+                        if (y > 28)
                         {
                             blocks[x, y, z].type = Block.Type.SNOW;
                         }
-                        else if (y > 20)
+                        else if (y > 10)
                         {
                             blocks[x, y, z].type = Block.Type.GRASS;
                         }
@@ -714,8 +719,11 @@ namespace SimpleEngine.Voxels
                 }
             }
 
-            greedyMesh();
+            GreedyMesh();
+        }
 
+        public void UploadVerticesToGPU()
+        {
             int vertexSize = Marshal.SizeOf(typeof(Vertex));
             int totalSize = vertices.Count * vertexSize;
 
