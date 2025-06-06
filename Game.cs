@@ -31,12 +31,11 @@ namespace SimpleEngine.Core
 
                 API = ContextAPI.OpenGL,
                 APIVersion = new Version(4, 6),
-                Profile = ContextProfile.Core,
-                Vsync = VSyncMode.Off,
+                Profile = ContextProfile.Core
             }) 
         {
             CursorState = CursorState.Grabbed;
-            VSync = VSyncMode.On;
+            VSync = VSyncMode.Off;
         }
 
         private Shader s;
@@ -74,6 +73,8 @@ namespace SimpleEngine.Core
             chunkManager = new ChunkManager(cam);
 
             time.Start();
+
+           
         }
 
         protected override void OnUpdateFrame(FrameEventArgs args)

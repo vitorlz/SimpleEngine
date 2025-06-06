@@ -19,7 +19,7 @@ namespace SimpleEngine.Voxels
         private FastNoiseLite _noise;
 
         // the amount of chunks we can see --> render chunks within a _renderDistance * chunkSize distance from the camera.
-        private const int _renderDistance = 16;
+        private const int _renderDistance = 30;
 
         // maintain a list of chunks that should be rendered to the screen
 
@@ -37,6 +37,10 @@ namespace SimpleEngine.Voxels
         private ConcurrentQueue<Chunk> _readyToUpload = new ConcurrentQueue<Chunk>();
 
         private Vector2 _currentChunkPos = new Vector2();
+
+        private int _chunksPerThread = 3;
+        private int _gpuUploadLimit = _renderDistance * 2;
+        private int _chunksUploadPerFrame = 1;
 
         // populate _activeChunks with initial chunks based on the camera's initial position
         public ChunkManager(Camera camera) 
@@ -82,11 +86,7 @@ namespace SimpleEngine.Voxels
 
                 if ( distanceX > _renderDistance || distanceY > _renderDistance)
                 {
-                    Console.WriteLine("removing chunk");
-                    Console.WriteLine($"Distance X: {distanceX}, Distance Y: {distanceY}");
-
                     Chunk chunkToRemove = _activeChunks[i];
-
                     _loadedChunks.Remove((int)chunkToRemove.Pos.X + (int)chunkToRemove.Pos.Y * 10000);
                     _activeChunks.RemoveAt(i);
                 }
@@ -98,13 +98,28 @@ namespace SimpleEngine.Voxels
             // We are going to load two chunks per frame, each in a different thread.
             // The worker threads are going to get chunks from the _chunksToLoad, call CreateChunk() and put the loaded
             // chunks in _readyToUpload.
-            ThreadPool.QueueUserWorkItem(LoadChunk);
-            ThreadPool.QueueUserWorkItem(LoadChunk);
+
+            if(_readyToUpload.Count > _gpuUploadLimit)
+            {
+                return;
+            }
+
+            Task task = new Task(() =>
+            {
+                for(int i = 0; i < _chunksPerThread; i++)
+                {
+                    LoadChunk();
+                }
+            });
+
+            task.Start();
+            //ThreadPool.QueueUserWorkItem(LoadChunk);
+            //ThreadPool.QueueUserWorkItem(LoadChunk);
         }
 
         // create a chunk and put it in the ready to render queue. 
         // This is done by a worker thread.
-        public void LoadChunk(Object state)
+        public void LoadChunk()
         {   
             Chunk chunkToLoad;
             if(_chunksToLoad.TryDequeue(out chunkToLoad))
@@ -118,12 +133,15 @@ namespace SimpleEngine.Voxels
         // put the now ready-to-render chunk in _activeChunks so that it can be rendered
         public void UploadNewChunk()
         {
-            Chunk chunkToUpload;
-            if (_readyToUpload.TryDequeue(out chunkToUpload))
+            for (int i = 0; i < _chunksUploadPerFrame; i++)
             {
-                chunkToUpload.UploadVerticesToGPU();
-                _activeChunks.Add(chunkToUpload);
-            }
+                Chunk chunkToUpload;
+                if (_readyToUpload.TryDequeue(out chunkToUpload))
+                {
+                    chunkToUpload.UploadVerticesToGPU();
+                    _activeChunks.Add(chunkToUpload);
+                }
+            }   
         }
 
         public void RenderActiveChunks()
