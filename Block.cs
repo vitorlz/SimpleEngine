@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace SimpleEngine.Voxels
 {
-
     public struct Block
     {
         public Block() { }
-
         public enum Type
         {
             GRASS = 0,
@@ -20,7 +18,6 @@ namespace SimpleEngine.Voxels
             WOOD = 4,
             LEAVES = 5,
         }
-
         public Type type = Type.GRASS;
         public bool Active { get; set; } = false;
     }
