@@ -11,9 +11,7 @@ namespace SimpleEngine.Helper
         public static string FromProjectRoot(string relativePath)
         {
             string basePath = AppContext.BaseDirectory;
-
             string projectRoot = Path.Combine(basePath, @"../../../");
-
             string path = Path.Combine(projectRoot, relativePath);
 
             return path;

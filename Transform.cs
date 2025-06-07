@@ -7,10 +7,10 @@ using OpenTK.Mathematics;
 
 namespace SimpleEngine.Types
 {
-    public class Transform
+    public struct Transform
     {
-        public Vector3 Position;
-        public Quaternion Rotation;
-        public Vector3 Scale;
+        public Vector3 position;
+        public Quaternion rotation;
+        public Vector3 scale;
     }
 }

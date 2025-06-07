@@ -7,7 +7,7 @@ using OpenTK.Mathematics;
 
 namespace SimpleEngine.Voxels
 {
-    public class Quad
+    public struct Quad
     {
         public Vector3 Start { get; set; }
         public Vector3 DirU { get; set; }

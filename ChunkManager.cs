@@ -11,9 +11,9 @@ namespace SimpleEngine.Voxels
 {
     public class ChunkManager
     {
-        private const int _chunkSize = 16;
+        private const int _chunkSize = 32;
         // the amount of chunks we can see --> render chunks within a _renderDistance * chunkSize distance from the camera.
-        private const int _renderDistance = 30;
+        private const int _renderDistance = 32;
         private const int _chunksPerThread = 4;
         private const int _gpuUploadLimit = _renderDistance * 2;
         private const int _chunksUploadPerFrame = _renderDistance;
@@ -39,7 +39,6 @@ namespace SimpleEngine.Voxels
 
         private Vector2 _currentChunkPos = new Vector2();
 
-        // populate _activeChunks with initial chunks based on the camera's initial position
         public ChunkManager(Camera camera) 
         {
             _noises["height"] = new FastNoiseLite();
@@ -47,7 +46,6 @@ namespace SimpleEngine.Voxels
             _noises["tree"] = new FastNoiseLite();
 
             var rand = new Random();
-
             int seed = rand.Next();
 
             _noises["height"].SetSeed(seed);
@@ -59,16 +57,15 @@ namespace SimpleEngine.Voxels
             _noises["height"].SetFractalGain(0.8f);
 
             _noises["stone"].SetSeed(seed);
-            _noises["stone"].SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
-            _noises["stone"].SetFrequency(0.0005f);
+            _noises["stone"].SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+            _noises["stone"].SetFrequency(0.001f);
             
-
             _noises["tree"].SetSeed(seed);
             _noises["tree"].SetNoiseType(FastNoiseLite.NoiseType.Perlin);
             _noises["tree"].SetFrequency(0.001f);
             // figure out which chunk we are in now
             _camera = camera;
-            _cameraPos = new Vector2(_camera.Transform.Position.X, _camera.Transform.Position.Z);
+            _cameraPos = new Vector2(_camera.Transform.position.X, _camera.Transform.position.Z);
         }
 
         public void EnqueueNewChunks()
@@ -81,7 +78,7 @@ namespace SimpleEngine.Voxels
                     Vector2 pos = new Vector2((_currentChunkPos.X + x) * _chunkSize, (_currentChunkPos.Y + y) * _chunkSize);
                     if (!_loadedChunks.ContainsKey((int)pos.X + (int)pos.Y * 10000))
                     {
-                        Chunk newChunk = new Chunk(pos, _chunkSize, _noises);
+                        Chunk newChunk = new Chunk(pos, _chunkSize, _noises, new GreedyMesher());
                         _chunksToLoad.Enqueue(newChunk);
                         _loadedChunks[(int)pos.X + (int)pos.Y * 10000] = newChunk;
                     }
@@ -161,8 +158,8 @@ namespace SimpleEngine.Voxels
 
         public void UpdateCurrentChunkPos()
         {
-            _cameraPos.X = _camera.Transform.Position.X;
-            _cameraPos.Y = _camera.Transform.Position.Z;
+            _cameraPos.X = _camera.Transform.position.X;
+            _cameraPos.Y = _camera.Transform.position.Z;
             _currentChunkPos = (_cameraPos / _chunkSize).Truncate();
         }
 

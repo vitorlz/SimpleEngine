@@ -5,7 +5,6 @@ layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aTexCoords;
 layout(location = 3) in int aType;
 
-uniform mat4 m;
 uniform mat4 v;
 uniform mat4 p;
 
@@ -17,7 +16,7 @@ void main()
 {
 	Normal = aNormal;
 	TexCoords = aTexCoords;
-	gl_Position = p * v * m * vec4(aPos, 1.0);
+	gl_Position = p * v * vec4(aPos, 1.0);
 
 	float diff = max(dot(normalize(aNormal), vec3(0.3, 1.0, 0.3)), 0.0);
 

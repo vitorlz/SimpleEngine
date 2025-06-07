@@ -28,7 +28,6 @@ namespace SimpleEngine.Core
             : base(GameWindowSettings.Default, new NativeWindowSettings() { 
                 ClientSize = (width, height), 
                 Title = title,
-
                 API = ContextAPI.OpenGL,
                 APIVersion = new Version(4, 6),
                 Profile = ContextProfile.Core
@@ -40,12 +39,10 @@ namespace SimpleEngine.Core
 
         private Shader s;
         private bool wireFrameMode = false;
-        Stopwatch time = new Stopwatch();
-        Camera cam;
+        Camera _cam;
         //private Chunk chunk;
-        private ChunkManager chunkManager;
+        private ChunkManager _chunkManager;
 
-        Texture container;
         protected override void OnLoad()
         {
             base.OnLoad();
@@ -53,23 +50,16 @@ namespace SimpleEngine.Core
             s = new Shader(FileHelper.FromProjectRoot("shaders/vertex.vert"), FileHelper.FromProjectRoot("shaders/fragment.frag"));
 
             GL.Enable(EnableCap.DepthTest);
-       
             GL.ClearColor(0.039f, 0.8f, 1f, 1.0f);
-
-            //GL.Enable(EnableCap.CullFace);
-
-            container = new Texture(FileHelper.FromProjectRoot("textures/container.jpg"));
 
             Transform camTransform = new Transform();
 
-            camTransform.Position = new Vector3(0f, 64f, 0f);
-            camTransform.Rotation = Quaternion.Identity;
-            camTransform.Scale = new Vector3(1.0f);
+            camTransform.position = new Vector3(0f, 64f, 0f);
+            camTransform.rotation = Quaternion.Identity;
+            camTransform.scale = new Vector3(1.0f);
 
-            cam = new Camera(camTransform);
-            chunkManager = new ChunkManager(cam);
-
-            time.Start();
+            _cam = new Camera(camTransform);
+            _chunkManager = new ChunkManager(_cam);
         }
 
         protected override void OnUpdateFrame(FrameEventArgs args)
@@ -80,8 +70,6 @@ namespace SimpleEngine.Core
             {
                 Close();
             }
-            
-
 
             if(KeyboardState.IsKeyPressed(Keys.L))
             {
@@ -97,9 +85,8 @@ namespace SimpleEngine.Core
                 wireFrameMode = !wireFrameMode;
             }
             
-
-            cam.Update(args.Time, KeyboardState, MouseState);
-           
+            _cam.Update(args.Time, KeyboardState, MouseState);
+            _chunkManager.Update();
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -108,29 +95,19 @@ namespace SimpleEngine.Core
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), (float)800 / (float)600, 0.1f, 1000.0f);
-
             // the order of multiplication is different here because opentk's math library is row major and glsl is column major
-            // Matrix4 model = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
-            Matrix4 model = Matrix4.Identity;
-            Matrix4 view = cam.ViewMatrix;
+            Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), (float)this.ClientSize.X / (float)this.ClientSize.Y, 0.1f, 2000.0f);
+            Matrix4 view = _cam.ViewMatrix;
 
             // we transpose all matrices because we want to send them in column-major format to glsl
             proj.Transpose();
-            model.Transpose();
             view.Transpose();
 
             s.Use();
-            
-            s.SetMat4("m", model);
             s.SetMat4("v", view);
             s.SetMat4("p", proj);
-
-            s.SetInt("tex", 0);
-            container.Use();
-
-            chunkManager.Update();
-            chunkManager.RenderActiveChunks();
+           
+            _chunkManager.RenderActiveChunks();
             
             SwapBuffers();
         }
