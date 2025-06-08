@@ -40,9 +40,8 @@ namespace SimpleEngine.Core
         private Shader s;
         private bool wireFrameMode = false;
         Camera _cam;
-        //private Chunk chunk;
         private ChunkManager _chunkManager;
-
+       
         protected override void OnLoad()
         {
             base.OnLoad();
@@ -84,7 +83,7 @@ namespace SimpleEngine.Core
 
                 wireFrameMode = !wireFrameMode;
             }
-            
+
             _cam.Update(args.Time, KeyboardState, MouseState);
             _chunkManager.Update();
         }

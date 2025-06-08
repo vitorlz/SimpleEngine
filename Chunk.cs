@@ -11,13 +11,14 @@ using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using System.Runtime.ExceptionServices;
 
-
 namespace SimpleEngine.Voxels
 {
     public class Chunk
     {
+        private int _chunkHeight;
         private int _chunkSize;
         public int ChunkSize { get { return _chunkSize; } }
+        public int ChunkHeight { get { return _chunkHeight; } }
         private readonly IChunkMesher _chunkMesher;
 
         // The position of the chunk will be _chunkSize * Pos.x, _chunkSize * Pos.y
@@ -33,12 +34,13 @@ namespace SimpleEngine.Voxels
         private Dictionary<string, FastNoiseLite> _noises;        
         private Vector3 _chunkOffset = new Vector3();
 
-        public Chunk(Vector2 pos, int chunkSize, Dictionary<string, FastNoiseLite> noises, IChunkMesher chunkMesher)
+        public Chunk(Vector2 pos, int chunkSize, int chunkHeight, Dictionary<string, FastNoiseLite> noises, IChunkMesher chunkMesher)
         {
             Pos = pos;
             _chunkSize = chunkSize;
+            _chunkHeight = chunkHeight;
             _noises = noises;
-            _blocks = new Block[_chunkSize, _chunkSize, _chunkSize];
+            _blocks = new Block[_chunkSize, _chunkHeight, _chunkSize];
             _chunkOffset = new Vector3(Pos.X, 0, Pos.Y);
             _chunkMesher = chunkMesher;
         }
@@ -54,7 +56,7 @@ namespace SimpleEngine.Voxels
         {
             for (int x = 0; x < _chunkSize; x++)
             {
-                for (int y = 0; y < _chunkSize; y++)
+                for (int y = 0; y < _chunkHeight; y++)
                 {
                     for (int z = 0; z < _chunkSize; z++)
                     {
@@ -78,27 +80,27 @@ namespace SimpleEngine.Voxels
                     float stoneNoise = Math.Clamp(_noises["stone"].GetNoise(chunkPos.X, chunkPos.Y) / 0.5f + 0.5f, 0.0f, 1.0f);
                     float treeNoise = Math.Clamp(_noises["tree"].GetNoise(chunkPos.X, chunkPos.Y) / 0.5f + 0.5f, 0.0f, 1.0f);
 
-                    for (int y = 0; y <= _chunkSize * 0.1; y++)
+                    for (int y = 0; y <= _chunkHeight * 0.1; y++)
                     {
                         CreateBlock(Block.Type.WATER, x, y, z);
                     }
 
-                    for (int y = 0; y < _chunkSize * heightNoise; y++)
+                    for (int y = 0; y < _chunkHeight * heightNoise; y++)
                     {
-                        if (y > _chunkSize * 0.9)
+                        if (y > _chunkHeight * 0.9)
                         {
                             CreateBlock(Block.Type.SNOW, x, y, z);
                         }
-                        else if (y > _chunkSize * 0.1)
+                        else if (y > _chunkHeight * 0.1)
                         {
-                            if (stoneNoise > 0.7 && y > _chunkSize * 0.7)
+                            if (stoneNoise > 0.7 && y > _chunkHeight * 0.7)
                             {
                                 CreateBlock(Block.Type.STONE, x, y, z);
                             }
                             else
                             {
                                 CreateBlock(Block.Type.GRASS, x, y, z);
-                                if (y == (int)(_chunkSize * heightNoise))
+                                if (y == (int)(_chunkHeight * heightNoise))
                                 {
                                     if (treeNoise > 0.3)
                                     {
@@ -120,7 +122,7 @@ namespace SimpleEngine.Voxels
             int treeHeight = 3;
             y++;
 
-            if (!(x > 0 && x < _chunkSize - 1 && z > 0 && z < _chunkSize - 1 && y + treeHeight + 1 < _chunkSize - 1))
+            if (!(x > 0 && x < _chunkSize - 1 && z > 0 && z < _chunkSize - 1 && y + treeHeight + 1 < _chunkHeight - 1))
             {
                 return;
             }
@@ -143,7 +145,7 @@ namespace SimpleEngine.Voxels
 
         public void CreateBlock(Block.Type type, int x, int y, int z)
         {
-            if(x < 0 || x > _chunkSize - 1 || z < 0 || z > _chunkSize - 1 || y < 0 || y > _chunkSize - 1)
+            if(x < 0 || x > _chunkSize - 1 || z < 0 || z > _chunkSize - 1 || y < 0 || y > _chunkHeight - 1)
             {
                 return;
             }

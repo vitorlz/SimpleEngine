@@ -20,6 +20,7 @@ namespace SimpleEngine.Cam
         private Matrix4 ModelMatrix = Matrix4.Identity;
 
         private float _pitch = 0;
+        private float _yaw = 0;
 
         public float Velocity { get; set; } = 30.0f;
         public float Sensitivity { get; set; } = 10.0f;
@@ -32,32 +33,22 @@ namespace SimpleEngine.Cam
 
         public void Update(double dt, KeyboardState input, MouseState mouse)
         {
+            _yaw += -mouse.Delta.X * (float)dt * Sensitivity;
+            _pitch += -mouse.Delta.Y * (float)dt * Sensitivity;        
+            _pitch = MathHelper.Clamp(_pitch, -89f, 89f);
+
+            Quaternion pitch = Quaternion.FromAxisAngle(new Vector3(1.0f, 0.0f, 0.0f), MathHelper.DegreesToRadians(_pitch));
+            Quaternion yaw = Quaternion.FromAxisAngle(new Vector3(0.0f, 1.0f, 0.0f), MathHelper.DegreesToRadians(_yaw));
+
+            Transform.rotation = yaw * pitch;
+
+            ModelMatrix = Matrix4.CreateFromQuaternion(_transform.rotation);
+            ModelMatrix *= Matrix4.CreateTranslation(_transform.position);
             ModelMatrix.Transpose();
 
             Vector3 right = ModelMatrix.Column0.Xyz;
             Vector3 up = ModelMatrix.Column1.Xyz;
             Vector3 front = -ModelMatrix.Column2.Xyz;
-
-            Vector2 mouseDelta = mouse.Delta;
-            float deltaYaw = -mouse.Delta.X * (float)dt * Sensitivity;
-            float deltaPitch = -mouse.Delta.Y * (float)dt * Sensitivity;
-            _pitch += deltaPitch;
-
-            if (_pitch >= 89f)
-            {
-                _pitch = 89f;
-                deltaPitch = 0f;
-            }
-            else if (_pitch <= -89f)
-            {
-                _pitch = -89f;
-                deltaPitch = 0f;
-            }
-
-            Quaternion pitch = Quaternion.FromAxisAngle(new Vector3(1.0f, 0.0f, 0.0f), MathHelper.DegreesToRadians(deltaPitch));
-            Quaternion yaw = Quaternion.FromAxisAngle(new Vector3(0.0f, 1.0f, 0.0f), MathHelper.DegreesToRadians(deltaYaw));
-
-            Transform.rotation = yaw * _transform.rotation * pitch;
 
             float boost = 1f;
             if(input.IsKeyDown(Keys.LeftShift))

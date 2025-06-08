@@ -11,7 +11,8 @@ namespace SimpleEngine.Voxels
 {
     public class ChunkManager
     {
-        private const int _chunkSize = 32;
+        private const int _chunkHeight = 100;
+        private const int _chunkSize = 16;
         // the amount of chunks we can see --> render chunks within a _renderDistance * chunkSize distance from the camera.
         private const int _renderDistance = 32;
         private const int _chunksPerThread = 4;
@@ -50,11 +51,12 @@ namespace SimpleEngine.Voxels
 
             _noises["height"].SetSeed(seed);
             _noises["height"].SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-            _noises["height"].SetFrequency(0.0025f);
+            _noises["height"].SetFrequency(0.0015f);
             _noises["height"].SetFractalType(FastNoiseLite.FractalType.FBm);
-            _noises["height"].SetFractalOctaves(5);
+            _noises["height"].SetFractalOctaves(8);
             _noises["height"].SetFractalLacunarity(2.0f);
-            _noises["height"].SetFractalGain(0.8f);
+            _noises["height"].SetFractalGain(0.5f);
+            _noises["height"].SetFractalWeightedStrength(0.0f);
 
             _noises["stone"].SetSeed(seed);
             _noises["stone"].SetNoiseType(FastNoiseLite.NoiseType.Perlin);
@@ -78,7 +80,7 @@ namespace SimpleEngine.Voxels
                     Vector2 pos = new Vector2((_currentChunkPos.X + x) * _chunkSize, (_currentChunkPos.Y + y) * _chunkSize);
                     if (!_loadedChunks.ContainsKey((int)pos.X + (int)pos.Y * 10000))
                     {
-                        Chunk newChunk = new Chunk(pos, _chunkSize, _noises, new GreedyMesher());
+                        Chunk newChunk = new Chunk(pos, _chunkSize, _chunkHeight, _noises, new GreedyMesher());
                         _chunksToLoad.Enqueue(newChunk);
                         _loadedChunks[(int)pos.X + (int)pos.Y * 10000] = newChunk;
                     }
