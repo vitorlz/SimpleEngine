@@ -23,7 +23,7 @@ namespace SimpleEngine.Cam
         private float _yaw = 0;
 
         public float Velocity { get; set; } = 30.0f;
-        public float Sensitivity { get; set; } = 10.0f;
+        public float Sensitivity { get; set; } = 0.075f;
         public float Boost { get; set; } = 3.0f;
 
         public Camera(Transform transform)
@@ -33,8 +33,8 @@ namespace SimpleEngine.Cam
 
         public void Update(double dt, KeyboardState input, MouseState mouse)
         {
-            _yaw += -mouse.Delta.X * (float)dt * Sensitivity;
-            _pitch += -mouse.Delta.Y * (float)dt * Sensitivity;        
+            _yaw += -mouse.Delta.X * Sensitivity;
+            _pitch += -mouse.Delta.Y * Sensitivity;        
             _pitch = MathHelper.Clamp(_pitch, -89f, 89f);
 
             Quaternion pitch = Quaternion.FromAxisAngle(new Vector3(1.0f, 0.0f, 0.0f), MathHelper.DegreesToRadians(_pitch));
